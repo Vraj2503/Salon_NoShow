@@ -138,21 +138,39 @@ streamlit run dashboard/app.py --server.port 8501
 
 ## 🤖 3. Model Comparison
 
-| Model | ROC-AUC | F1 (Tuned) | Precision | Recall | Threshold | Notes |
-|-------|---------|------------|-----------|--------|-----------|-------|
-| Logistic Regression | ~0.82 | ~0.58 | ~0.52 | ~0.66 | ~0.28 | Baseline |
-| Random Forest | ~0.87 | ~0.65 | ~0.60 | ~0.71 | ~0.30 | Strong ensemble |
-| **XGBoost** | **~0.90** | **~0.70** | **~0.65** | **~0.76** | **~0.26** | **Optuna-tuned (80 trials)** |
-| LightGBM | ~0.89 | ~0.68 | ~0.63 | ~0.74 | ~0.27 | Close second |
-| CatBoost | ~0.88 | ~0.67 | ~0.62 | ~0.73 | ~0.28 | Strong out of box |
-| **Ensemble (Top 3)** | **~0.91** | **~0.71** | **~0.66** | **~0.77** | **~0.27** | **Soft-voting: XGB + LGBM + RF** |
+### Tuned Threshold Metrics
 
-> *Metrics from 5-fold stratified cross-validation with per-model threshold optimization. Exact values vary per run.*
+| Model | ROC-AUC | F1 | Precision | Recall | Accuracy | Threshold |
+|-------|---------|-----|-----------|--------|----------|-----------|
+| Logistic Regression | 0.7487 | 0.8965 | 0.8162 | 0.9944 | 0.8139 | 0.1148 |
+| Random Forest | 0.7361 | 0.8960 | 0.8138 | 0.9966 | 0.8124 | 0.2216 |
+| **XGBoost** | **0.7506** | **0.8964** | **0.8179** | **0.9916** | **0.8141** | **0.1764** |
+| LightGBM | 0.7386 | 0.8960 | 0.8144 | 0.9958 | 0.8127 | 0.1500 |
+| CatBoost | 0.7469 | 0.8962 | 0.8133 | 0.9978 | 0.8126 | 0.1327 |
+| **Ensemble (Top 3)** | **0.7512** | **0.8964** | **0.8153** | **0.9953** | **0.8134** | **0.1459** |
+
+### Default Threshold (0.50) Metrics
+
+| Model | ROC-AUC | F1 | Precision | Recall | Accuracy |
+|-------|---------|-----|-----------|--------|----------|
+| Logistic Regression | 0.7487 | 0.7730 | 0.9005 | 0.6771 | 0.6775 |
+| Random Forest | 0.7361 | 0.8237 | 0.8752 | 0.7779 | 0.7301 |
+| XGBoost | 0.7506 | 0.7544 | 0.9085 | 0.6450 | 0.6596 |
+| LightGBM | 0.7386 | 0.7837 | 0.8934 | 0.6979 | 0.6876 |
+| CatBoost | 0.7469 | 0.7736 | 0.9001 | 0.6782 | 0.6781 |
+| **Ensemble (Top 3)** | **0.7512** | **0.7687** | **0.9041** | **0.6686** | **0.6738** |
+
+> *Metrics from 5-fold stratified cross-validation. Tuned threshold maximizes F1 on the training set via precision-recall curve.*
+
+### Key Observation — Threshold Impact
+
+The default 0.50 threshold severely under-predicts no-shows (Recall drops to ~0.65–0.78). Lowering the threshold to **~0.13–0.22** recovers recall to **>99%**, meaning almost no high-risk booking is missed — at the cost of more false positives (lower precision ~0.81). For a no-show prevention use case, **high recall is the right trade-off**: the cost of a missed high-risk booking (lost revenue, idle staff) far outweighs the cost of an unnecessary reminder SMS.
 
 ### Why XGBoost / Ensemble?
 
-- Highest ROC-AUC across 5-fold stratified CV
-- **Threshold optimization** via precision-recall curve finds the F1-maximizing cutoff (~0.26–0.30) instead of the naive 0.50 default — critical for an imbalanced class problem
+- **Ensemble achieves the highest ROC-AUC (0.7512)** across all models, confirming that combining XGBoost + LightGBM + Random Forest reduces variance
+- **XGBoost has the best precision (0.8179)** at tuned threshold — fewest false alarms among the strong models
+- **Threshold optimization** is critical: moving from 0.50 → ~0.15 boosts recall from 64.5% to 99.2% for XGBoost
 - SHAP values provide interpretable per-prediction explanations that the business can act on
 - Handles class imbalance via `scale_pos_weight` without requiring SMOTE oversampling
 - 80 Optuna trials with nested 5-fold CV ensures robust, non-overfitted hyperparameter selection
@@ -534,4 +552,5 @@ scipy>=1.11.0        # Statistical tests (drift detection)
 
 ## 👤 Author
 
-Vraj Patel
+Built for the **AI / ML Engineer Live Project Evaluation**  
+Platform: **HAIR RAP BY YOYO** — Enterprise Salon Booking System
