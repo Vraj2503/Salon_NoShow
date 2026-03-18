@@ -40,7 +40,7 @@ salon-noshow-ai/
 
 ```bash
 # Build and run both services (FastAPI + Streamlit)
-docker build -t salon-noshow-ai .
+docker build -t salon-noshow.
 docker run -p 8000:8000 -p 8501:8501 salon-noshow-ai
 
 # Access
