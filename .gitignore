@@ -1,0 +1,10 @@
+models/
+catboost_info/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.env
+venv/
+.venv/
+.DS_Store
